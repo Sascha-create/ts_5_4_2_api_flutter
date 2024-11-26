@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MainApp());
@@ -8,21 +8,19 @@ void main() {
 
 const dogFactUri = "https://dogapi.dog/api/v2/facts";
 
-Future<String> getDataFromApi(String uri) async {
-  final response = await get(Uri.parse(uri));
-
-  return response.body;
-}
-
 Future<String> getDogFact() async {
-  final jsonString = await getDataFromApi(dogFactUri);
+  final http.Response response = await http.get(Uri.parse(dogFactUri));
+  if (response.statusCode == 200) {
+    final String data = response.body;
 
-  final jsonObject = jsonDecode(jsonString);
+    final Map<String, dynamic> decodedJson = jsonDecode(data);
 
+    final String dogFact = decodedJson["data"][0]["attributes"]["body"];
 
-  final String dogFact = jsonObject["data"][0]["attributes"]["body"];
-
-  return dogFact;
+    return dogFact;
+  } else {
+    return Future.error("Error");
+  }
 }
 
 class MainApp extends StatefulWidget {
@@ -54,17 +52,41 @@ class _MainAppState extends State<MainApp> {
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                SizedBox(height: 240, child: Text(dogFact)),
                 const SizedBox(
-                  height: 16,
+                  height: 160,
+                ),
+                FutureBuilder(
+                  future: getDogFact(),
+                  builder: (context, snapshot) {
+                    String newDogFact = '';
+                    if (snapshot.hasError) {
+                      newDogFact = 'Es ist ein Fehler aufgetreten!';
+                      return Text(newDogFact);
+                    } else if (snapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasData) {
+                      newDogFact = snapshot.data ?? 'Kein Fakt vorhanden';
+                      return Text(newDogFact);
+                    }
+                    return Text(dogFact);
+                  },
+                ),
+                const Expanded(
+                  child: SizedBox(),
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      getNewFact();
+                      setState(() {
+                        getNewFact();
+                      });
                     },
-                    child: const Text("Nächster Fakt"))
+                    child: const Text("Nächster Fakt")),
+                const SizedBox(
+                  height: 140,
+                ),
               ],
             ),
           ),
