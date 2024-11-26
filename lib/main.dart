@@ -33,11 +33,6 @@ class MainApp extends StatefulWidget {
 class _MainAppState extends State<MainApp> {
   String dogFact = "Noch kein Fakt geladen";
 
-  void getNewFact() async {
-    dogFact = await getDogFact();
-    setState(() {});
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -63,7 +58,9 @@ class _MainAppState extends State<MainApp> {
                     String newDogFact = '';
                     if (snapshot.hasError) {
                       newDogFact = 'Es ist ein Fehler aufgetreten!';
-                      return Text(newDogFact);
+                      return Text(
+                          style: const TextStyle(color: Colors.red),
+                          newDogFact);
                     } else if (snapshot.connectionState ==
                         ConnectionState.waiting) {
                       return const CircularProgressIndicator();
@@ -79,9 +76,7 @@ class _MainAppState extends State<MainApp> {
                 ),
                 ElevatedButton(
                     onPressed: () {
-                      setState(() {
-                        getNewFact();
-                      });
+                      setState(() {});
                     },
                     child: const Text("Nächster Fakt")),
                 const SizedBox(
